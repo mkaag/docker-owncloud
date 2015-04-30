@@ -39,21 +39,24 @@ RUN \
 # -----------------------------------------------------------------------------
 # Post-install
 # -----------------------------------------------------------------------------
-RUN \
-  sed -i "s/\/var\/www/\/opt\/owncloud/" /etc/php5/fpm/php.ini && \
-  rm /etc/nginx/sites-enabled/default
-
-ADD build/nginx.conf /etc/nginx/nginx.conf
+ADD build/phpfpm.sh /etc/my_init.d/13_phpfpm.sh
+ADD build/nginx.sh /etc/my_init.d/14_nginx.sh
+ADD build/nginx.conf /etc/nginx/sites-enabled/owncloud
 ADD build/status.conf /etc/nginx/conf.d/status.conf
 ADD build/autoconfig.php /opt/owncloud/config/autoconfig.php
 
-EXPOSE 9000
+RUN \
+    sed -i "s/\/var\/www/\/opt\/owncloud/" /etc/php5/fpm/php.ini && \
+    rm /etc/nginx/sites-enabled/default && \
+    chmod +x /etc/my_init.d/13_phpfpm.sh && \
+    chmod +x /etc/my_init.d/14_nginx.sh
+
+EXPOSE 80 443
 VOLUME ["/opt/owncloud/apps"]
 VOLUME ["/opt/owncloud/config"]
 VOLUME ["/opt/owncloud/data"]
 
 CMD ["/sbin/my_init"]
-CMD ["/usr/sbin/php5-fpm", "-c /etc/php5/fpm"]
 
 # -----------------------------------------------------------------------------
 # Clean up
