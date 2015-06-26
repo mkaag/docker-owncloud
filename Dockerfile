@@ -18,8 +18,6 @@ RUN \
     echo "deb http://apt.newrelic.com/debian/ newrelic non-free" > /etc/apt/sources.list.d/newrelic.list && \
     apt-get update -qqy
 
-
-
 # -----------------------------------------------------------------------------
 # Install
 # -----------------------------------------------------------------------------
@@ -36,9 +34,7 @@ RUN \
   curl -s -o owncloud.tar.bz2 https://download.owncloud.org/community/owncloud-${OWNCLOUD_VERSION}.tar.bz2 && \
   tar jxf owncloud.tar.bz2 && \
   rm -f owncloud.tar.bz2 && \
-  chown -R www-data:www-data owncloud/ && \
-  rm -fr /var/www && \
-  ln -s /opt/owncloud /var/www
+  chown -R www-data:www-data owncloud/
 
 # -----------------------------------------------------------------------------
 # Post-install
@@ -60,8 +56,14 @@ ADD build/nginx.conf /etc/nginx/sites-enabled/owncloud
 ADD build/status.conf /etc/nginx/conf.d/status.conf
 ADD build/autoconfig.php /var/www/owncloud/config/autoconfig.php
 
+RUN \
+    sed -i "s/\/var\/www/\/opt\/owncloud/" /etc/php5/fpm/php.ini && \
+    rm /etc/nginx/sites-enabled/default && \
+    chmod +x /etc/my_init.d/13_phpfpm.sh && \
+    chmod +x /etc/my_init.d/14_nginx.sh
+
 EXPOSE 80 443
-VOLUME ["/var/www/owncloud/apps", "/var/www/owncloud/config", "/var/www/owncloud/data"]
+VOLUME ["/opt/owncloud/apps", "/opt/owncloud/config", "/opt/owncloud/data"]
 
 CMD ["/sbin/my_init"]
 
